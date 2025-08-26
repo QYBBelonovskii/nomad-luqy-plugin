@@ -1,3 +1,4 @@
 data:
-  m_def: nomad_luqy_plugin.schema_packages.schema_package.NewSchemaPackage
-  name: Markus
+  m_def: nomad_luqy_plugin.schema_packages.schema_package.LuQYProMeasurement
+  times: ["2025-04-14 13:43:24"]
+  luqy_percent: [1.417]

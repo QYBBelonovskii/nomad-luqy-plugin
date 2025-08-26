@@ -8,4 +8,6 @@ def test_schema_package():
     entry_archive = parse(test_file)[0]
     normalize_all(entry_archive)
 
-    assert entry_archive.data.message == 'Hello Markus!'
+    assert entry_archive.data is not None
+    assert entry_archive.data.times[0].startswith('2025-')
+    assert entry_archive.data.luqy_percent[0] == 1.417

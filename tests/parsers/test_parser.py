@@ -2,12 +2,20 @@ import logging
 
 from nomad.datamodel import EntryArchive
 
-from nomad_luqy_plugin.parsers.parser import NewParser
+from nomad_luqy_plugin.parsers.parser import LuQYParser
 
 
 def test_parse_file():
-    parser = NewParser()
+    parser = LuQYParser()
     archive = EntryArchive()
-    parser.parse('tests/data/example.out', archive, logging.getLogger())
+    parser.parse('tests/data/GaAs013_largeSpot.txt', archive, logging.getLogger())
 
-    assert archive.workflow2.name == 'test'
+    assert archive.data is not None
+    assert hasattr(archive.data, 'times')
+    assert len(archive.data.times) > 0
+
+    assert hasattr(archive.data, 'wavelength')
+    assert len(archive.data.wavelength) > 0
+
+    assert hasattr(archive.data, 'lum_flux_density')
+    assert archive.data.lum_flux_density.shape[0] == len(archive.data.wavelength)
