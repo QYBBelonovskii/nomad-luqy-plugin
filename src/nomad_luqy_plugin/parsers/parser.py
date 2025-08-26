@@ -1,20 +1,26 @@
+"""
+Parser implementation for LuQY Pro absolute photoluminescence files.
+
+"""
+
 from __future__ import annotations
 
 import re
 from typing import TYPE_CHECKING
 
 import numpy as np
-
-if TYPE_CHECKING:
-    from nomad.datamodel.datamodel import (
-        EntryArchive,
-    )
-    from structlog.stdlib import (
-        BoundLogger,
-    )
-
 from nomad.config import config
 from nomad.parsing.parser import MatchingParser
+
+if TYPE_CHECKING:
+    from nomad.datamodel.datamodel import EntryArchive
+    from structlog.stdlib import BoundLogger
+
+from nomad_luqy_plugin.schema_packages.schema_package import (
+    LuQYProMeasurement,
+    LuQYProResult,
+    LuQYProSettings,
+)
 
 configuration = config.get_plugin_entry_point(
     'nomad_luqy_plugin.parsers:parser_entry_point'
@@ -23,9 +29,135 @@ configuration = config.get_plugin_entry_point(
 FILE_RE = r'.*\.(?:txt|csv|tsv)$'
 
 
+def _parse_header(
+    lines: list[str], logger: BoundLogger
+) -> tuple[dict[str, float], dict[str, float], int]:
+    """
+    Parse the header of a LuQY Pro file.
+
+    """
+    header_map_settings = {
+        'Laser intensity (suns)': 'laser_intensity_suns',
+        'Bias Voltage (V)': 'bias_voltage',
+        'SMU current density (mA/cm2)': 'smu_current_density',
+        'SMU current density (mA/cm²)': 'smu_current_density',
+        'Integration Time (ms)': 'integration_time',
+        'Delay time (s)': 'delay_time',
+        'EQE @ laser wavelength': 'eqe_at_laser',
+        'Laser spot size (cm²)': 'laser_spot_size',
+        'Laser spot size (cm^2)': 'laser_spot_size',
+        'Subcell area (cm²)': 'subcell_area',
+        'Subcell area (cm^2)': 'subcell_area',
+        'Subcell': 'subcell',
+    }
+    header_map_result = {
+        'LuQY (%)': 'luminescence_quantum_yield',
+        'iVoc (V)': 'quasi_fermi_level_splitting',
+        'iVoc (eV)': 'quasi_fermi_level_splitting',
+        'iVoc Confidence': 'qfls_confidence',
+        'Bandgap (eV)': 'bandgap',
+        'Jsc (mA/cm2)': 'derived_jsc',
+        'Jsc (mA/cm²)': 'derived_jsc',
+    }
+
+    settings_vals: dict[str, float | str] = {}
+    result_vals: dict[str, float] = {}
+    data_start_idx: int = len(lines)
+
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+
+        if re.match(r'^-[-\\s]*$', stripped):
+            data_start_idx = idx + 2
+            break
+        if '\t' not in line:
+            continue
+        key, value = line.split('\t', 1)
+        key = key.strip()
+        value = value.strip()
+        if key in header_map_settings:
+            target = header_map_settings[key]
+            if target == 'subcell':
+                settings_vals[target] = value
+            else:
+                try:
+                    settings_vals[target] = float(value.replace(',', '.'))
+                except ValueError:
+                    logger.debug(
+                        'Could not convert setting to float', key=key, value=value
+                    )
+        elif key in header_map_result:
+            target = header_map_result[key]
+            try:
+                result_vals[target] = float(value.replace(',', '.'))
+            except ValueError:
+                logger.debug('Could not convert result to float', key=key, value=value)
+
+    return settings_vals, result_vals, data_start_idx
+
+
+def _parse_numeric_data(
+    lines: list[str], start_idx: int, logger: BoundLogger
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Parse numeric spectral data from a LuQY Pro file.
+
+    Expects columns: Wavelength (nm), Luminescence flux density (photons/s/cm²/nm),
+    Raw spectrum counts, Dark spectrum counts.
+
+    """
+    wavelengths: list[float] = []
+    lum_flux: list[float] = []
+    raw_counts: list[float] = []
+    dark_counts: list[float] = []
+
+    if start_idx >= len(lines):
+        return (
+            np.zeros(0, dtype=float),
+            np.zeros(0, dtype=float),
+            np.zeros(0, dtype=float),
+            np.zeros(0, dtype=float),
+        )
+
+    for line in lines[start_idx:]:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        parts = re.split(r'\\s+', stripped)
+        if len(parts) < 4:
+            continue
+        try:
+            wl = float(parts[0].replace(',', '.'))
+            lf = float(parts[1].replace(',', '.'))
+            rc = float(parts[2].replace(',', '.'))
+            dc = float(parts[3].replace(',', '.'))
+        except ValueError:
+            logger.debug('Skipping malformed numeric row', row=line)
+            continue
+        wavelengths.append(wl)
+        lum_flux.append(lf)
+        raw_counts.append(rc)
+        dark_counts.append(dc)
+
+    return (
+        np.asarray(wavelengths, dtype=float),
+        np.asarray(lum_flux, dtype=float),
+        np.asarray(raw_counts, dtype=float),
+        np.asarray(dark_counts, dtype=float),
+    )
+
+
 class LuQYParser(MatchingParser):
-    def __init__(self):
-        super().__init__(name='luqy_parser')
+    """
+    Parser for LuQY Pro files.
+
+    Matches files with extensions .txt, .csv, or .tsv.
+    Extracts measurement settings, results, and spectral data.
+
+    """
+
+    def __init__(self) -> None:
+        super().__init__(name='luqy_pro_parser')
         self._mainfile_name_re = re.compile(FILE_RE)
 
     def parse(
@@ -35,138 +167,48 @@ class LuQYParser(MatchingParser):
         logger: BoundLogger,
         child_archives: dict[str, EntryArchive] | None = None,
     ) -> None:
-        from nomad_luqy_plugin.schema_packages.schema_package import LuQYProMeasurement
-
-        with open(mainfile, encoding='utf-8', errors='ignore') as f:
-            lines = [ln.rstrip('\n') for ln in f]
-
-        if not lines:
-            logger.warning('LuQYParser.parse', msg='empty file')
+        try:
+            with open(mainfile, mode='rb') as f:
+                raw_bytes = f.read()
+        except OSError:
+            logger.error('Failed to open file', file=mainfile)
             return
 
-        sep_regex = r'\t+|\s{2,}'
+        try:
+            text = raw_bytes.decode('cp1252', errors='replace')
+        except Exception:
+            text = raw_bytes.decode('utf-8', errors='replace')
+        lines = text.splitlines()
+        if not lines:
+            logger.warning('Empty LuQY file', file=mainfile)
+            return
 
-        times = [p for p in re.split(sep_regex, lines[0].strip()) if p]
-        n_times = len(times)
-
-        cut = None
-        for i, ln in enumerate(lines[1:], start=1):
-            if ln.strip().startswith('---'):
-                cut = i
-                break
-        if cut is None:
-            for i, ln in enumerate(lines[1:], start=1):
-                if ln.strip().lower().startswith('wavelength'):
-                    cut = i - 1
-                    break
-
-        param_lines = lines[1:cut] if cut else lines[1:]
-        spectrum_start = None
-        if cut is not None:
-            j = cut + 1
-
-            while j < len(lines) and not re.match(r'^\s*\d', lines[j]):
-                j += 1
-            spectrum_start = j if j < len(lines) else None
-
-        def split_row(s: str) -> list[str]:
-            return [p for p in re.split(sep_regex, s.strip()) if p != '']
-
-        params: dict[str, list[float]] = {}
-        for ln in param_lines:
-            s = ln.strip()
-            if not s or s.startswith('-'):
-                continue
-            parts = split_row(ln)
-            if len(parts) < 2:
-                continue
-            name = parts[0].strip()
-            vals = parts[1 : 1 + n_times]
-
-            out = []
-            for v in vals:
-                try:
-                    out.append(float(v.replace(',', '.')))
-                except Exception:
-                    out.append(np.nan)
-
-            if len(out) < n_times:
-                out += [np.nan] * (n_times - len(out))
-            params[name] = out
-
-        wavelength = []
-        spectra_rows = []
-        if spectrum_start is not None:
-            for ln in lines[spectrum_start:]:
-                if not ln.strip():
-                    continue
-                parts = split_row(ln)
-                if not parts or not re.match(r'^\d', parts[0]):
-                    continue
-                try:
-                    wl = float(parts[0].replace(',', '.'))
-                except Exception:
-                    continue
-                vals = []
-                for v in parts[1 : 1 + n_times]:
-                    try:
-                        vals.append(float(v.replace(',', '.')))
-                    except Exception:
-                        vals.append(np.nan)
-                if len(vals) < n_times:
-                    vals += [np.nan] * (n_times - len(vals))
-                wavelength.append(wl)
-                spectra_rows.append(vals)
-
-        wavelength = np.array(wavelength, dtype=float)
-        lum_flux_density = (
-            np.array(spectra_rows, dtype=float)
-            if spectra_rows
-            else np.zeros((0, 0), dtype=float)
+        settings_vals, result_vals, data_start_idx = _parse_header(lines, logger)
+        wavelength, lum_flux, raw_counts, dark_counts = _parse_numeric_data(
+            lines, data_start_idx, logger
         )
 
         meas = LuQYProMeasurement()
-        meas.times = times
+        meas.settings = LuQYProSettings()
 
-        meas.luqy_percent = params.get('LuQY (%)')
-        meas.qfls = params.get('QFLS (eV)')
-        meas.qfls_confidence = params.get('QFLS confidence')
-        meas.laser_intensity = params.get('Laser intensity (suns)')
-        meas.bias_voltage = params.get('Bias voltage (V)')
-        meas.smu_current_density = params.get(
-            'SMU current density (mA/cm2)'
-        ) or params.get('SMU current density (mA/cm^2)')
-        meas.integration_time = params.get('Integration Time (ms)')
-        meas.delay_time = params.get('Delay time (s)')
-        meas.bandgap = params.get('Bandgap (eV)')
-        meas.jsc = params.get('Jsc (mA/cm2)') or params.get('Jsc (mA/cm^2)')
-        meas.eqe_at_laser = params.get('EQE @ laser wavelength')
-        meas.laser_spot_size = params.get('Laser spot size (cm )') or params.get(
-            'Laser spot size (cm^2)'
-        )
-        meas.subcell_area = params.get('Subcell area (cm )') or params.get(
-            'Subcell area (cm^2)'
-        )
-        meas.subcell = params.get('Subcell')
+        for attr, val in settings_vals.items():
+            try:
+                setattr(meas.settings, attr, val)
+            except Exception:
+                logger.debug('Unknown setting attribute', attr=attr)
 
-        meas.wavelength = wavelength
-        if lum_flux_density.size > 0:
-            meas.lum_flux_density = lum_flux_density
+        meas.results = [LuQYProResult()]
+        r = meas.results[0]
+        for attr, val in result_vals.items():
+            try:
+                setattr(r, attr, val)
+            except Exception:
+                logger.debug('Unknown result attribute', attr=attr)
+
+        if wavelength.size:
+            r.wavelength = wavelength
+            r.luminescence_flux_density = lum_flux
+            r.raw_spectrum_counts = raw_counts
+            r.dark_spectrum_counts = dark_counts
 
         archive.data = meas
-
-
-"""
-class NewParser(MatchingParser):
-    def parse(
-        self,
-        mainfile: str,
-        archive: 'EntryArchive',
-        logger: 'BoundLogger',
-        child_archives: dict[str, 'EntryArchive'] = None,
-    ) -> None:
-        logger.info('NewParser.parse', parameter=configuration.parameter)
-
-        archive.workflow2 = Workflow(name='test')
-
-"""
