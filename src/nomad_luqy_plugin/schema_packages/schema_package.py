@@ -217,7 +217,12 @@ class LuQYProMeasurement(Measurement, EntryData):
         description='Optional identifiers such as sample ID, operator or instrument.',
     )
 
-    m_def = Section(label='LuQY Pro measurement')
+    m_def = Section(
+        label='LuQY Pro measurement',
+        a_eln=ELNAnnotation(
+            lane_width='800px',
+        ),
+    )
 
 
 m_package.__init_metainfo__()
