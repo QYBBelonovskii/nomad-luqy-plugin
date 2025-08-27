@@ -6,6 +6,7 @@ Parser implementation for LuQY Pro absolute photoluminescence files.
 from __future__ import annotations
 
 import re
+import unicodedata
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -30,6 +31,27 @@ FILE_RE = r'.*\.(?:txt|csv|tsv)$'
 MIN_COLS = 4
 
 
+def _canon_key(s: str) -> str:
+    """
+    Canonicalize a header key string.
+    Removes extraneous whitespace and normalizes certain Unicode characters.
+
+    """
+    s = unicodedata.normalize('NFKC', s).replace('\u00a0', ' ')  # NBSP
+    s = s.strip()
+    s = (
+        s.replace('cmÂ²', 'cm^2')
+        .replace('cm²', 'cm^2')
+        .replace('cm�', 'cm^2')
+        .replace('cm**2', 'cm^2')
+        .replace('cm2', 'cm^2')
+        .replace('mA/cm2', 'mA/cm^2')
+        .replace('mA/cm²', 'mA/cm^2')
+    )
+    s = re.sub(r'\s+', ' ', s)
+    return s
+
+
 def _parse_header(
     lines: list[str], logger: BoundLogger
 ) -> tuple[dict[str, float], dict[str, float], int]:
@@ -40,19 +62,12 @@ def _parse_header(
     header_map_settings = {
         'Laser intensity (suns)': 'laser_intensity_suns',
         'Bias Voltage (V)': 'bias_voltage',
-        'SMU current density (mA/cm2)': 'smu_current_density',
-        'SMU current density (mA/cm²)': 'smu_current_density',
+        'SMU current density (mA/cm^2)': 'smu_current_density',
         'Integration Time (ms)': 'integration_time',
         'Delay time (s)': 'delay_time',
         'EQE @ laser wavelength': 'eqe_at_laser',
-        'Laser spot size (cm²)': 'laser_spot_size',
         'Laser spot size (cm^2)': 'laser_spot_size',
-        'Laser spot size (cm�)': 'laser_spot_size',
-        'Laser spot size (cm2)': 'laser_spot_size',
-        'Subcell area (cm²)': 'subcell_area',
         'Subcell area (cm^2)': 'subcell_area',
-        'Subcell area (cm�)': 'subcell_area',
-        'Subcell area (cm2)': 'subcell_area',
         'Subcell': 'subcell',
     }
     header_map_result = {
@@ -61,8 +76,7 @@ def _parse_header(
         'iVoc (eV)': 'quasi_fermi_level_splitting',
         'iVoc Confidence': 'qfls_confidence',
         'Bandgap (eV)': 'bandgap',
-        'Jsc (mA/cm2)': 'derived_jsc',
-        'Jsc (mA/cm²)': 'derived_jsc',
+        'Jsc (mA/cm^2)': 'derived_jsc',
     }
 
     settings_vals: dict[str, float | str] = {}
@@ -78,8 +92,7 @@ def _parse_header(
         if '\t' not in line:
             continue
         key, value = line.split('\t', 1)
-        key = key.strip()
-
+        key = _canon_key(key)
         value = value.strip()
         if key in header_map_settings:
             target = header_map_settings[key]
@@ -174,16 +187,27 @@ class LuQYParser(MatchingParser):
         child_archives: dict[str, EntryArchive] | None = None,
     ) -> None:
         try:
-            with open(mainfile, mode='rb') as f:
+            with archive.m_context.raw_file(mainfile, mode='rb') as f:
                 raw_bytes = f.read()
-        except OSError:
-            logger.error('Failed to open file', file=mainfile)
-            return
+        except Exception as e_ctx:
+            logger.debug(
+                'raw_file failed, falling back to open()',
+                file=mainfile,
+                error=str(e_ctx),
+            )
+            try:
+                with open(mainfile, mode='rb') as f:
+                    raw_bytes = f.read()
+            except OSError as e:
+                logger.error('Failed to open file', file=mainfile, error=str(e))
+                return
 
         try:
+            text = raw_bytes.decode('utf-8', errors='strict')
+        except UnicodeDecodeError:
             text = raw_bytes.decode('cp1252', errors='replace')
-        except Exception:
-            text = raw_bytes.decode('utf-8', errors='replace')
+        text = text.replace('Â²', '²')
+
         lines = text.splitlines()
         if not lines:
             logger.warning('Empty LuQY file', file=mainfile)
