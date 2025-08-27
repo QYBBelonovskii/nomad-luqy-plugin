@@ -43,8 +43,11 @@ from nomad.config.models.ui import (
 SCHEMA_QN = 'nomad_luqy_plugin.schema_packages.schema_package.LuQYProMeasurement'
 
 app_entry_point = AppEntryPoint(
-    name='LuQY Pro Explorer',
-    description='Explore LuQY Pro absolute PL measurements: filters, table and a demo dashboard.',
+    name='LuQY Pro',
+    description=(
+        'Explore LuQY Pro absolute PL measurements: '
+        'filters, table and a demo dashboard.'
+    ),
     app=App(
         label='LuQY Pro',
         path='luqypro',
@@ -65,56 +68,66 @@ app_entry_point = AppEntryPoint(
                 'subcell',
             ],
             options={
-                'entry': Column(quantity='entry_id', label='Entry', selected=False),
+                'entry': Column(
+                    quantity='entry_id',
+                    label='Entry',
+                    selected=False,
+                ),
                 'created': Column(
-                    quantity='upload_create_time', label='Uploaded at', selected=True
+                    quantity='upload_create_time',
+                    label='Uploaded at',
+                    selected=True,
                 ),
                 # SETTINGS
                 'intensity': Column(
-                    quantity=f'data.settings.laser_intensity_suns#{SCHEMA_QN}',
+                    quantity=(f'data.settings.laser_intensity_suns#{SCHEMA_QN}'),
                     label='Laser intensity (suns)',
                     selected=True,
                 ),
                 'spot': Column(
-                    quantity=f'data.settings.laser_spot_size#{SCHEMA_QN}',
+                    quantity=(f'data.settings.laser_spot_size#{SCHEMA_QN}'),
                     label='Spot (cm²)',
                     unit='cm**2',
                     selected=True,
                 ),
                 'area': Column(
-                    quantity=f'data.settings.subcell_area#{SCHEMA_QN}',
+                    quantity=(f'data.settings.subcell_area#{SCHEMA_QN}'),
                     label='Area (cm²)',
                     unit='cm**2',
                     selected=True,
                 ),
                 'subcell': Column(
-                    quantity=f'data.settings.subcell#{SCHEMA_QN}',
+                    quantity=(f'data.settings.subcell#{SCHEMA_QN}'),
                     label='Subcell',
                     selected=True,
                 ),
                 # RESULTS
                 'luqy': Column(
-                    quantity=f'data.results[0].luminescence_quantum_yield#{SCHEMA_QN}',
+                    quantity=(
+                        f'data.results[0].luminescence_quantum_yield#{SCHEMA_QN}'
+                    ),
                     label='LuQY (%)',
                     selected=True,
                     format={'decimals': 4, 'mode': 'standard'},
                 ),
                 'bandgap': Column(
-                    quantity=f'data.results[0].bandgap#{SCHEMA_QN}',
+                    quantity=(f'data.results[0].bandgap#{SCHEMA_QN}'),
                     label='Bandgap (eV)',
                     unit='eV',
                     selected=True,
                     format={'decimals': 3, 'mode': 'standard'},
                 ),
                 'qfls': Column(
-                    quantity=f'data.results[0].quasi_fermi_level_splitting#{SCHEMA_QN}',
+                    quantity=(
+                        f'data.results[0].quasi_fermi_level_splitting#{SCHEMA_QN}'
+                    ),
                     label='QFLS (eV)',
                     unit='eV',
                     selected=True,
                     format={'decimals': 3, 'mode': 'standard'},
                 ),
                 'jsc': Column(
-                    quantity=f'data.results[0].derived_jsc#{SCHEMA_QN}',
+                    quantity=(f'data.results[0].derived_jsc#{SCHEMA_QN}'),
                     label='Jsc (mA/cm²)',
                     unit='mA/cm**2',
                     selected=True,
@@ -126,14 +139,19 @@ app_entry_point = AppEntryPoint(
             title='Filters',
             size=MenuSizeEnum.MD,
             items=[
-                MenuItemTerms(search_quantity='datasets.dataset_name', title='Dataset'),
                 MenuItemTerms(
-                    search_quantity=f'data.settings.subcell#{SCHEMA_QN}',
+                    search_quantity='datasets.dataset_name',
+                    title='Dataset',
+                ),
+                MenuItemTerms(
+                    search_quantity=(f'data.settings.subcell#{SCHEMA_QN}'),
                     title='Subcell',
                 ),
                 MenuItemHistogram(
                     x=Axis(
-                        search_quantity=f'data.settings.laser_intensity_suns#{SCHEMA_QN}'
+                        search_quantity=(
+                            f'data.settings.laser_intensity_suns#{SCHEMA_QN}'
+                        )
                     ),
                     title='Laser intensity (suns)',
                     nbins=30,
@@ -141,7 +159,9 @@ app_entry_point = AppEntryPoint(
                 ),
                 MenuItemHistogram(
                     x=Axis(
-                        search_quantity=f'data.results[*].luminescence_quantum_yield#{SCHEMA_QN}'
+                        search_quantity=(
+                            f'data.results[*].luminescence_quantum_yield#{SCHEMA_QN}'
+                        )
                     ),
                     title='LuQY (%)',
                     nbins=30,
@@ -149,7 +169,7 @@ app_entry_point = AppEntryPoint(
                 ),
                 MenuItemHistogram(
                     x=Axis(
-                        search_quantity=f'data.results[*].bandgap#{SCHEMA_QN}',
+                        search_quantity=(f'data.results[*].bandgap#{SCHEMA_QN}'),
                         unit='eV',
                     ),
                     title='Bandgap (eV)',
@@ -158,7 +178,9 @@ app_entry_point = AppEntryPoint(
                 ),
                 MenuItemHistogram(
                     x=Axis(
-                        search_quantity=f'data.results[*].quasi_fermi_level_splitting#{SCHEMA_QN}',
+                        search_quantity=(
+                            f'data.results[*].quasi_fermi_level_splitting#{SCHEMA_QN}'
+                        ),
                         unit='eV',
                     ),
                     title='QFLS (eV)',
@@ -167,7 +189,7 @@ app_entry_point = AppEntryPoint(
                 ),
                 MenuItemHistogram(
                     x=Axis(
-                        search_quantity=f'data.results[*].derived_jsc#{SCHEMA_QN}',
+                        search_quantity=(f'data.results[*].derived_jsc#{SCHEMA_QN}'),
                         unit='mA/cm**2',
                     ),
                     title='Jsc (mA/cm²)',
@@ -175,7 +197,9 @@ app_entry_point = AppEntryPoint(
                     show_input=True,
                 ),
                 MenuItemHistogram(
-                    x=Axis(search_quantity='upload_create_time'),
+                    x=Axis(
+                        search_quantity='upload_create_time',
+                    ),
                     title='Uploads over time',
                     nbins=30,
                     show_input=True,
@@ -187,11 +211,13 @@ app_entry_point = AppEntryPoint(
                 WidgetScatterPlot(
                     title='QFLS vs Bandgap',
                     x=Axis(
-                        search_quantity=f'data.results[*].bandgap#{SCHEMA_QN}',
+                        search_quantity=(f'data.results[*].bandgap#{SCHEMA_QN}'),
                         unit='eV',
                     ),
                     y=Axis(
-                        search_quantity=f'data.results[*].quasi_fermi_level_splitting#{SCHEMA_QN}',
+                        search_quantity=(
+                            f'data.results[*].quasi_fermi_level_splitting#{SCHEMA_QN}'
+                        ),
                         unit='eV',
                     ),
                     autorange=True,
@@ -199,6 +225,5 @@ app_entry_point = AppEntryPoint(
                 ),
             ]
         ),
-        filters_locked={'section_defs.definition_qualified_name': [SCHEMA_QN]},
     ),
 )
