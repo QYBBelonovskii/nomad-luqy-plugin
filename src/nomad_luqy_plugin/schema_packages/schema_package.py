@@ -173,7 +173,7 @@ class LuQYProResult(MeasurementResult):
     )
     luminescence_flux_density = Quantity(
         type=np.float64,
-        unit='s/(cm**2*nm)',
+        unit='1/(s*cm**2*nm)',
         shape=['*'],
         description='Spectral luminescence flux density (photons/(s cm² nm)).',
     )

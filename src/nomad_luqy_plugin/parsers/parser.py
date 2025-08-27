@@ -27,6 +27,7 @@ configuration = config.get_plugin_entry_point(
 )
 
 FILE_RE = r'.*\.(?:txt|csv|tsv)$'
+MIN_COLS = 4
 
 
 def _parse_header(
@@ -123,8 +124,8 @@ def _parse_numeric_data(
         stripped = line.strip()
         if not stripped:
             continue
-        parts = re.split(r'\\s+', stripped)
-        if len(parts) < 4:
+        parts = stripped.split('\t') if '\t' in stripped else re.split(r'\s+', stripped)
+        if len(parts) < MIN_COLS:
             continue
         try:
             wl = float(parts[0].replace(',', '.'))

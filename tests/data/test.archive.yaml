@@ -1,4 +1,22 @@
 data:
   m_def: nomad_luqy_plugin.schema_packages.schema_package.LuQYProMeasurement
-  times: ["2025-04-14 13:43:24"]
-  luqy_percent: [1.417]
+  method: LuQY Pro absolute photoluminescence
+  settings:
+    laser_intensity_suns: 0.91
+    bias_voltage: 0.0 V
+    smu_current_density: 0.0 mA/cm**2
+    integration_time: 100 ms
+    delay_time: 0 s
+    eqe_at_laser: 0.90
+    laser_spot_size: 0.10 cm**2
+    subcell_area: 1.0 cm**2
+    subcell: "--"
+  results:
+    - luminescence_quantum_yield: 0.01417
+      quasi_fermi_level_splitting: 1.532 eV
+      bandgap: 2.095 eV
+      derived_jsc: 10.32 mA/cm**2
+      wavelength: [549.5612, 549.9388, 550.3163]  # nm
+      luminescence_flux_density: [0.0, 0.0, 0.0]  # 1/(s*cm**2*nm)
+      raw_spectrum_counts:  [1501.733, 1501.067, 1503.467]
+      dark_spectrum_counts: [1500.533, 1496.000, 1498.667]
