@@ -1,36 +1,31 @@
 from nomad.config.models.plugins import AppEntryPoint
 from nomad.config.models.ui import (
     App,
-    Axis,
     Column,
     Columns,
-    Dashboard,
-    Layout,
     Menu,
-    MenuItemHistogram,
     MenuItemTerms,
     MenuSizeEnum,
     SearchQuantities,
-    WidgetScatterPlot,
 )
 
 SCHEMA_QN = 'nomad_luqy_plugin.schema_packages.schema_package.LuQYProMeasurement'
 
 app_entry_point = AppEntryPoint(
     name='LuQY Pro',
-    description='Browse LuQY Pro entries: filters, table, and a demo scatter.',
+    description='Browse LuQY Pro entries (minimal safe app).',
     app=App(
         label='LuQY Pro',
-        path='luqypro',
+        path='luqypro',  # <= ровно сюда ты заходишь
         category='Measurements',
         breadcrumb='Explore LuQY Pro',
         search_quantities=SearchQuantities(include=[f'*#{SCHEMA_QN}']),
         columns=Columns(
-            selected=['created', 'luqy', 'bandgap', 'qfls', 'jsc'],
+            selected=['entry', 'luqy', 'bandgap', 'qfls'],
             options={
-                'created': Column(
-                    quantity='upload_create_time',
-                    label='Uploaded at',
+                'entry': Column(
+                    quantity='entry_id',
+                    label='Entry',
                     selected=True,
                 ),
                 'luqy': Column(
@@ -39,14 +34,12 @@ app_entry_point = AppEntryPoint(
                     ),
                     label='LuQY (%)',
                     selected=True,
-                    format={'decimals': 4, 'mode': 'standard'},
                 ),
                 'bandgap': Column(
                     quantity=f'data.results[0].bandgap#{SCHEMA_QN}',
                     label='Bandgap (eV)',
                     unit='eV',
                     selected=True,
-                    format={'decimals': 3, 'mode': 'standard'},
                 ),
                 'qfls': Column(
                     quantity=(
@@ -55,67 +48,19 @@ app_entry_point = AppEntryPoint(
                     label='QFLS (eV)',
                     unit='eV',
                     selected=True,
-                    format={'decimals': 3, 'mode': 'standard'},
-                ),
-                'jsc': Column(
-                    quantity=f'data.results[0].derived_jsc#{SCHEMA_QN}',
-                    label='Jsc (mA/cm²)',
-                    unit='mA/cm**2',
-                    selected=True,
-                    format={'decimals': 3, 'mode': 'standard'},
                 ),
             },
         ),
+        # Без гистограмм и дашборда, только безопасный terms-фильтр
         menu=Menu(
             title='Filters',
-            size=MenuSizeEnum.MD,
+            size=MenuSizeEnum.SM,
             items=[
-                # Останется терминами (категории) – безопасно
                 MenuItemTerms(
                     search_quantity=f'data.settings.subcell#{SCHEMA_QN}',
                     title='Subcell',
                 ),
-                # Только числовые скаляры без [*]
-                MenuItemHistogram(
-                    x=Axis(
-                        search_quantity=(
-                            f'data.settings.laser_intensity_suns#{SCHEMA_QN}'
-                        )
-                    ),
-                    title='Laser intensity (suns)',
-                    nbins=30,
-                    show_input=True,
-                ),
-                MenuItemHistogram(
-                    x=Axis(
-                        search_quantity=(
-                            f'data.results[0].luminescence_quantum_yield#{SCHEMA_QN}'
-                        )
-                    ),
-                    title='LuQY (%)',
-                    nbins=30,
-                    show_input=True,
-                ),
             ],
-        ),
-        dashboard=Dashboard(
-            widgets=[
-                WidgetScatterPlot(
-                    title='QFLS vs Bandgap (first result)',
-                    x=Axis(
-                        search_quantity=f'data.results[0].bandgap#{SCHEMA_QN}',
-                        unit='eV',
-                    ),
-                    y=Axis(
-                        search_quantity=(
-                            f'data.results[0].quasi_fermi_level_splitting#{SCHEMA_QN}'
-                        ),
-                        unit='eV',
-                    ),
-                    autorange=True,
-                    layout={'lg': Layout(w=6, h=5, x=0, y=0)},
-                ),
-            ]
         ),
     ),
 )
