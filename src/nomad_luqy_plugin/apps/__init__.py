@@ -1,45 +1,79 @@
 from nomad.config.models.plugins import AppEntryPoint
 from nomad.config.models.ui import (
     App,
+    Axis,
     Column,
     Columns,
+    Dashboard,
+    Layout,
     Menu,
+    MenuItemHistogram,
     MenuItemTerms,
     MenuSizeEnum,
     SearchQuantities,
+    WidgetScatterPlot,
 )
 
 SCHEMA_QN = 'nomad_luqy_plugin.schema_packages.schema_package.LuQYProMeasurement'
 
 app_entry_point = AppEntryPoint(
-    name='LuQY Pro',
-    description='Browse LuQY Pro entries (minimal safe app).',
+    name='LuQY Pro Explorer',
+    description=(
+        'Browse and analyze LuQY Pro absolute PL measurements: '
+        'datasets, table, filters and quick charts.'
+    ),
     app=App(
         label='LuQY Pro',
-        path='luqypro',  # <= ровно сюда ты заходишь
+        path='luqypro',
         category='Measurements',
         breadcrumb='Explore LuQY Pro',
         search_quantities=SearchQuantities(include=[f'*#{SCHEMA_QN}']),
         columns=Columns(
-            selected=['entry', 'luqy', 'bandgap', 'qfls'],
+            selected=[
+                'mainfile',
+                'created',
+                'luqy',
+                'bandgap',
+                'qfls',
+                'jsc',
+                'intensity',
+                'tint',
+                'delay',
+                'spot',
+                'area',
+                'subcell',
+            ],
             options={
-                'entry': Column(
-                    quantity='entry_id',
-                    label='Entry',
+                'mainfile': Column(
+                    quantity='mainfile',
+                    label='File',
                     selected=True,
                 ),
+                'created': Column(
+                    quantity='upload_create_time',
+                    label='Uploaded at',
+                    selected=True,
+                ),
+                'dataset': Column(
+                    quantity='datasets.dataset_name',
+                    label='Dataset',
+                    selected=False,
+                ),
+                # RESULTS
                 'luqy': Column(
                     quantity=(
                         f'data.results[0].luminescence_quantum_yield#{SCHEMA_QN}'
                     ),
                     label='LuQY (%)',
                     selected=True,
+                    format={'decimals': 4, 'mode': 'standard'},
                 ),
                 'bandgap': Column(
                     quantity=f'data.results[0].bandgap#{SCHEMA_QN}',
                     label='Bandgap (eV)',
                     unit='eV',
                     selected=True,
+                    format={'decimals': 3, 'mode': 'standard'},
                 ),
                 'qfls': Column(
                     quantity=(
@@ -48,19 +82,143 @@ app_entry_point = AppEntryPoint(
                     label='QFLS (eV)',
                     unit='eV',
                     selected=True,
+                    format={'decimals': 3, 'mode': 'standard'},
+                ),
+                'jsc': Column(
+                    quantity=f'data.results[0].derived_jsc#{SCHEMA_QN}',
+                    label='Jsc (mA/cm²)',
+                    unit='mA/cm**2',
+                    selected=True,
+                    format={'decimals': 3, 'mode': 'standard'},
+                ),
+                # SETTINGS
+                'intensity': Column(
+                    quantity=(f'data.settings.laser_intensity_suns#{SCHEMA_QN}'),
+                    label='Laser suns',
+                    selected=True,
+                    format={'decimals': 3, 'mode': 'standard'},
+                ),
+                'tint': Column(
+                    quantity=(f'data.settings.integration_time#{SCHEMA_QN}'),
+                    label='Integration (ms)',
+                    unit='ms',
+                    selected=True,
+                    format={'decimals': 2, 'mode': 'standard'},
+                ),
+                'delay': Column(
+                    quantity=f'data.settings.delay_time#{SCHEMA_QN}',
+                    label='Delay (s)',
+                    unit='s',
+                    selected=True,
+                    format={'decimals': 2, 'mode': 'standard'},
+                ),
+                'spot': Column(
+                    quantity=f'data.settings.laser_spot_size#{SCHEMA_QN}',
+                    label='Spot (cm²)',
+                    unit='cm**2',
+                    selected=True,
+                    format={'decimals': 3, 'mode': 'standard'},
+                ),
+                'area': Column(
+                    quantity=f'data.settings.subcell_area#{SCHEMA_QN}',
+                    label='Area (cm²)',
+                    unit='cm**2',
+                    selected=True,
+                    format={'decimals': 3, 'mode': 'standard'},
+                ),
+                'subcell': Column(
+                    quantity=f'data.settings.subcell#{SCHEMA_QN}',
+                    label='Subcell',
+                    selected=True,
                 ),
             },
         ),
-        # Без гистограмм и дашборда, только безопасный terms-фильтр
+        # LEFT FILTERS
         menu=Menu(
             title='Filters',
-            size=MenuSizeEnum.SM,
+            size=MenuSizeEnum.MD,
             items=[
+                # Categorical filters
+                MenuItemTerms(
+                    search_quantity='datasets.dataset_name',
+                    title='Dataset',
+                ),
                 MenuItemTerms(
                     search_quantity=f'data.settings.subcell#{SCHEMA_QN}',
                     title='Subcell',
                 ),
+                # Histograms for numerical filters
+                MenuItemHistogram(
+                    x=Axis(
+                        search_quantity=(
+                            f'data.results[0].luminescence_quantum_yield#{SCHEMA_QN}'
+                        )
+                    ),
+                    title='LuQY (%)',
+                    nbins=30,
+                    show_input=True,
+                ),
+                MenuItemHistogram(
+                    x=Axis(
+                        search_quantity=(f'data.results[0].bandgap#{SCHEMA_QN}'),
+                        unit='eV',
+                    ),
+                    title='Bandgap (eV)',
+                    nbins=30,
+                    show_input=True,
+                ),
+                MenuItemHistogram(
+                    x=Axis(
+                        search_quantity=(
+                            f'data.results[0].quasi_fermi_level_splitting#{SCHEMA_QN}'
+                        ),
+                        unit='eV',
+                    ),
+                    title='QFLS (eV)',
+                    nbins=30,
+                    show_input=True,
+                ),
+                MenuItemHistogram(
+                    x=Axis(
+                        search_quantity=(
+                            f'data.settings.laser_intensity_suns#{SCHEMA_QN}'
+                        )
+                    ),
+                    title='Laser suns',
+                    nbins=30,
+                    show_input=True,
+                ),
+                MenuItemHistogram(
+                    x=Axis(
+                        search_quantity=(f'data.settings.integration_time#{SCHEMA_QN}'),
+                        unit='ms',
+                    ),
+                    title='Integration (ms)',
+                    nbins=30,
+                    show_input=True,
+                ),
             ],
+        ),
+        # data visualization  charts
+        dashboard=Dashboard(
+            widgets=[
+                WidgetScatterPlot(
+                    title='QFLS vs Bandgap',
+                    x=Axis(
+                        search_quantity=(f'data.results[0].bandgap#{SCHEMA_QN}'),
+                        unit='eV',
+                    ),
+                    y=Axis(
+                        search_quantity=(
+                            f'data.results[0].quasi_fermi_level_splitting#{SCHEMA_QN}'
+                        ),
+                        unit='eV',
+                    ),
+                    color=(f'data.results[0].luminescence_quantum_yield#{SCHEMA_QN}'),
+                    autorange=True,
+                    layout={'lg': Layout(w=6, h=5, x=0, y=0)},
+                ),
+            ]
         ),
     ),
 )
