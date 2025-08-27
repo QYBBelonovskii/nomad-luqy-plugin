@@ -43,11 +43,11 @@ from nomad.config.models.ui import (
 SCHEMA_QN = 'nomad_luqy_plugin.schema_packages.schema_package.LuQYProMeasurement'
 
 app_entry_point = AppEntryPoint(
-    name='LuQY Explorer',
+    name='LuQY Pro Explorer',
     description='Explore LuQY Pro absolute PL measurements: filters, table and a demo dashboard.',
     app=App(
-        label='LuQY',
-        path='luqy',  # URL: /app/luqy
+        label='LuQY Pro',
+        path='luqypro',
         category='Measurements',
         breadcrumb='Explore LuQY Pro',
         search_quantities=SearchQuantities(include=[f'*#{SCHEMA_QN}']),
