@@ -145,6 +145,27 @@ app_entry_point = AppEntryPoint(
                 ),
             ],
         ),
+        # data visualization  charts
+        dashboard=Dashboard(
+            widgets=[
+                WidgetScatterPlot(
+                    title='QFLS vs Bandgap',
+                    x=Axis(
+                        search_quantity=(f'data.results[0].bandgap#{SCHEMA_QN}'),
+                        unit='eV',
+                    ),
+                    y=Axis(
+                        search_quantity=(
+                            f'data.results[0].quasi_fermi_level_splitting#{SCHEMA_QN}'
+                        ),
+                        unit='eV',
+                    ),
+                    color=(f'data.results[0].luminescence_quantum_yield#{SCHEMA_QN}'),
+                    autorange=True,
+                    layout={'lg': Layout(w=6, h=5, x=0, y=0)},
+                ),
+            ]
+        ),
     ),
 )
 
