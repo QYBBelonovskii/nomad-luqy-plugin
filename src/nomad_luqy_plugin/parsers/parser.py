@@ -47,8 +47,12 @@ def _parse_header(
         'EQE @ laser wavelength': 'eqe_at_laser',
         'Laser spot size (cm²)': 'laser_spot_size',
         'Laser spot size (cm^2)': 'laser_spot_size',
+        'Laser spot size (cm�)': 'laser_spot_size',
+        'Laser spot size (cm2)': 'laser_spot_size',
         'Subcell area (cm²)': 'subcell_area',
         'Subcell area (cm^2)': 'subcell_area',
+        'Subcell area (cm�)': 'subcell_area',
+        'Subcell area (cm2)': 'subcell_area',
         'Subcell': 'subcell',
     }
     header_map_result = {
@@ -75,6 +79,7 @@ def _parse_header(
             continue
         key, value = line.split('\t', 1)
         key = key.strip()
+
         value = value.strip()
         if key in header_map_settings:
             target = header_map_settings[key]
