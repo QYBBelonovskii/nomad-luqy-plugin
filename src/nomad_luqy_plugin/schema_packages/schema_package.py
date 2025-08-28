@@ -19,7 +19,7 @@ from nomad.datamodel.metainfo.basesections import (
     MeasurementResult,
     ReadableIdentifiers,
 )
-from nomad.metainfo import Quantity, SchemaPackage, Section, SubSection
+from nomad.metainfo import Datetime, Quantity, SchemaPackage, Section, SubSection
 
 m_package = SchemaPackage(name='luqy_pro_schema')
 
@@ -32,12 +32,21 @@ class LuQYProSettings(ArchiveSection):
 
     m_def = Section(label='LuQYProSettings')
 
-    laser_intensity_suns = Quantity(
+    timestamp = Quantity(
+        type=Datetime,
+        description='Timestamp of the measurement in ISO 8601 format.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.DateTimeEditQuantity,
+            label='Measurement time',
+        ),
+    )
+    laser_intensity = Quantity(
         type=np.float64,
-        description='Laser intensity in units of suns.',
+        unit='mW/cm**2',
+        description='Laser intensity',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
-            label='Laser intensity (suns)',
+            label='Laser intensity',
         ),
     )
     bias_voltage = Quantity(
@@ -121,7 +130,7 @@ class LuQYProResult(MeasurementResult):
 
     m_def = Section(label='LuQYProResult')
 
-    luminescence_quantum_yield = Quantity(
+    luqy = Quantity(
         type=np.float64,
         description='Luminescence quantum yield',
         a_eln=ELNAnnotation(
@@ -129,13 +138,22 @@ class LuQYProResult(MeasurementResult):
             label='LuQY (%)',
         ),
     )
-    quasi_fermi_level_splitting = Quantity(
+    qfls = Quantity(
         type=np.float64,
         unit='eV',
         description='Quasi‑Fermi level splitting derived from the measurement.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
-            label='iVoc (eV)',
+            label='QFLS',
+        ),
+    )
+    qfls_het = Quantity(
+        type=np.float64,
+        unit='eV',
+        description='Quasi-Fermi level splitting at the HET.',
+        a_eln=ELNAnnotation(
+            component=ELNComponentEnum.NumberEditQuantity,
+            label='QFLS HET',
         ),
     )
     qfls_confidence = Quantity(
@@ -143,7 +161,7 @@ class LuQYProResult(MeasurementResult):
         description='Quasi-Fermi level splitting.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
-            label='iVoc confidence',
+            label='QFLS confidence',
         ),
     )
     bandgap = Quantity(
@@ -152,7 +170,7 @@ class LuQYProResult(MeasurementResult):
         description='Bandgap of the material.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
-            label='Bandgap (eV)',
+            label='Bandgap',
         ),
     )
     derived_jsc = Quantity(
@@ -161,7 +179,7 @@ class LuQYProResult(MeasurementResult):
         description='Short‑circuit current density derived from the measurement.',
         a_eln=ELNAnnotation(
             component=ELNComponentEnum.NumberEditQuantity,
-            label='Jsc (mA/cm²)',
+            label='Jsc',
         ),
     )
 

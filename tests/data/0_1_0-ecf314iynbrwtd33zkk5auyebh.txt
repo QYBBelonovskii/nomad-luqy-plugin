@@ -1,7 +1,7 @@
 12/12/2024 9:12:17 PM
 LuQY (%)	0.0677
-iVoc (V)	1.532
-iVoc Confidence	0
+QFLS (V)	1.532
+QFLS Confidence	0
 Laser intensity (suns)	0.91
 Bias Voltage (V)	0.0000
 SMU current density (mA/cm2)	0.000

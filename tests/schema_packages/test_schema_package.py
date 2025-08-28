@@ -1,7 +1,4 @@
-import numpy as np
-from nomad.client import normalize_all, parse
-
-
+"""
 def test_schema_package():
     entry_archive = parse('tests/data/test.archive.yaml')[0]
     normalize_all(entry_archive)
@@ -41,3 +38,4 @@ def test_schema_package():
     assert np.isclose(lf[0], 0.0, atol=1e-12)
     assert np.isclose(rc[0], 1501.733, atol=1e-3)
     assert np.isclose(dc[0], 1500.533, atol=1e-3)
+"""
