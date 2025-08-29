@@ -3,13 +3,11 @@ from nomad.config.models.ui import (
     App,
     Axis,
     Column,
-    Columns,
     Dashboard,
     Layout,
     Menu,
     MenuItemHistogram,
     MenuItemTerms,
-    MenuSizeEnum,
     SearchQuantities,
     WidgetScatterPlot,
 )
@@ -32,7 +30,7 @@ app_entry_point = AppEntryPoint(
             # Results
             Column(
                 quantity=f'data.results[0].luqy#{SCHEMA_QN}',
-                label='LuQY',
+                label='LuQY (%)',
                 selected=True,
                 format={'decimals': 4, 'mode': 'standard'},
             ),
@@ -60,33 +58,33 @@ app_entry_point = AppEntryPoint(
             # Settings
             Column(
                 quantity=f'data.settings.laser_intensity#{SCHEMA_QN}',
-                label='Laser (mW/cm²)',
+                label='Laser',
                 unit='mW/cm**2',
                 selected=True,
                 format={'decimals': 2, 'mode': 'standard'},
             ),
             Column(
                 quantity=f'data.settings.integration_time#{SCHEMA_QN}',
-                label='Integration (ms)',
+                label='Integration',
                 unit='ms',
                 selected=True,
                 format={'decimals': 0, 'mode': 'standard'},
             ),
             Column(
                 quantity=f'data.settings.delay_time#{SCHEMA_QN}',
-                label='Delay (s)',
+                label='Delay',
                 unit='s',
                 selected=False,
             ),
             Column(
                 quantity=f'data.settings.laser_spot_size#{SCHEMA_QN}',
-                label='Spot (cm²)',
+                label='Spot',
                 unit='cm**2',
                 selected=False,
             ),
             Column(
                 quantity=f'data.settings.subcell_area#{SCHEMA_QN}',
-                label='Area (cm²)',
+                label='Area',
                 unit='cm**2',
                 selected=False,
             ),

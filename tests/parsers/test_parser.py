@@ -36,7 +36,7 @@ def test_power_cont_sweep_2_values():
     assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
     assert s.subcell == '--'
 
-    assert np.isclose(float(r.luqy), 0.004403, atol=ATOL)
+    assert np.isclose(float(r.luqy), 0.4403, atol=ATOL)
     assert np.isclose(r.qfls.m_as('eV'), 0.8944, atol=ATOL)
     assert getattr(r, 'qfls_het', None) in (None, np.nan)
     assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
@@ -63,7 +63,7 @@ def test_power_cont_sweep_2_values():
     assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
     assert s.subcell == '--'
 
-    assert np.isclose(float(r.luqy), 0.004232, atol=ATOL)
+    assert np.isclose(float(r.luqy), 0.4232, atol=ATOL)
     assert np.isclose(r.qfls.m_as('eV'), 0.8866, atol=ATOL)
     assert getattr(r, 'qfls_het', None) in (None, np.nan)
     assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
@@ -98,7 +98,7 @@ def test_het_avg_sweep_values_suns():
     assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
     assert s.subcell == '--'
 
-    assert np.isclose(float(r.luqy), 0.00477, atol=ATOL)
+    assert np.isclose(float(r.luqy), 0.477, atol=ATOL)
     assert np.isclose(r.qfls.m_as('eV'), 1.007, atol=ATOL)
     assert np.isclose(r.qfls_het.m_as('eV'), 1.009, atol=ATOL)
     assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
@@ -125,7 +125,7 @@ def test_het_avg_sweep_values_suns():
     assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
     assert s.subcell == '--'
 
-    assert np.isclose(float(r.luqy), 0.00496, atol=ATOL)
+    assert np.isclose(float(r.luqy), 0.496, atol=ATOL)
     assert np.isclose(r.qfls.m_as('eV'), 1.004, atol=ATOL)
     assert np.isclose(r.qfls_het.m_as('eV'), 1.006, atol=ATOL)
     assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
@@ -159,7 +159,7 @@ def test_het_avg_single_values():
     assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
     assert s.subcell == '--'
 
-    assert np.isclose(float(r.luqy), 0.004958000000000001, atol=ATOL)
+    assert np.isclose(float(r.luqy), 0.4958, atol=ATOL)
     assert np.isclose(r.qfls.m_as('eV'), 1.008, atol=ATOL)
     assert np.isclose(r.qfls_het.m_as('eV'), 1.009, atol=ATOL)
     assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
