@@ -114,34 +114,6 @@ app_entry_point = AppEntryPoint(
                     title='Dataset',
                     quantity='datasets.dataset_name',
                 ),
-                MenuItemTerms(
-                    title='Subcell',
-                    quantity=f'data.settings.subcell#{SCHEMA_QN}',
-                ),
-                MenuItemHistogram(
-                    title='LuQY (fraction)',
-                    x=Axis(search_quantity=f'data.results[0].luqy#{SCHEMA_QN}'),
-                    show_input=True,
-                    nbins=30,
-                ),
-                MenuItemHistogram(
-                    title='Bandgap (eV)',
-                    x=Axis(
-                        search_quantity=f'data.results[0].bandgap#{SCHEMA_QN}',
-                        unit='eV',
-                    ),
-                    show_input=True,
-                    nbins=30,
-                ),
-                MenuItemHistogram(
-                    title='Laser intensity (mW/cm²)',
-                    x=Axis(
-                        search_quantity=f'data.settings.laser_intensity#{SCHEMA_QN}',
-                        unit='mW/cm**2',
-                    ),
-                    show_input=True,
-                    nbins=30,
-                ),
             ],
         ),
         # data visualization  charts
