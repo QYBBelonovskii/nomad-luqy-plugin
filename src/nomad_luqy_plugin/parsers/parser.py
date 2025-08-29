@@ -412,9 +412,6 @@ class LuQYParser(MatchingParser):
         logger.debug('Child child_archives', child_archives=child_archives)
         logger.debug('Archive before parsing', archive=archive)
 
-        # read file content (try archive context first, then fallback to open)
-        raw_bytes: bytes
-
         try:
             with archive.m_context.raw_file(mainfile, mode='rb') as f:
                 raw_bytes = f.read()
@@ -511,9 +508,13 @@ class LuQYParser(MatchingParser):
 
         if child_archives:
             # multi:
-            for key, ch in child_archives.items():
-                i = int(key)
-                ch.data = build_measurement(i)
+            for i in range(num_meas):
+                key = str(i)
+                if key in child_archives:
+                    child_archives[key].data = build_measurement(i)
+            # if num_meas > 0:
+            #    archive.data = build_measurement(0)
+            return
 
         # single:
         archive.data = build_measurement(0)
