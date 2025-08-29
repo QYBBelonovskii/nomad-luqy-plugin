@@ -11,7 +11,7 @@ def test_schema_package():
 
     # settings
     s = meas.settings
-    assert np.isclose(s.laser_intensity_suns, 0.91, atol=1e-12)
+    assert np.isclose(s.laser_intensity.m_as('mW/cm**2'), 0.91, atol=1e-12)
     assert np.isclose(s.bias_voltage.m_as('V'), 0.0, atol=1e-12)
     assert np.isclose(s.smu_current_density.m_as('mA/cm**2'), 0.0, atol=1e-12)
     assert np.isclose(s.integration_time.m_as('ms'), 100.0, atol=1e-12)
@@ -23,7 +23,7 @@ def test_schema_package():
 
     # results
     r = meas.results[0]
-    assert np.isclose(r.luminescence_quantum_yield, 0.0677, atol=1e-12)
+    assert np.isclose(r.plqy, 0.0677, atol=1e-12)
     assert np.isclose(r.quasi_fermi_level_splitting.m_as('eV'), 1.532, atol=1e-12)
     assert np.isclose(r.bandgap.m_as('eV'), 2.095, atol=1e-12)
     assert np.isclose(r.derived_jsc.m_as('mA/cm**2'), 10.32, atol=1e-12)

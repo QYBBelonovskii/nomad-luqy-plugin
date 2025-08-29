@@ -1,106 +1,178 @@
 import logging
 
 import numpy as np
-from nomad.datamodel import EntryArchive
+from nomad.datamodel.datamodel import EntryArchive
 
 from nomad_luqy_plugin.parsers.parser import LuQYParser
 
-
-def test_parse_file_single_meas():
-    fpath = 'tests/data/LuQY-Control Measurement Files/Power_Avg.txt'
-
-    parser = LuQYParser()
-    archive = EntryArchive()
-    parser.parse(fpath, archive, logging.getLogger())
-
-    assert archive.data is not None
-    meas = archive.data
-    assert getattr(meas, 'settings') is not None
-    assert getattr(meas, 'results') and len(meas.results) == 1
-
-    # check settings
-    settings = meas.settings
-    assert np.isclose(
-        settings.laser_intensity.m_as('mW/cm**2'), 71.45, rtol=0, atol=1e-8
-    )
-    assert np.isclose(settings.bias_voltage.m_as('V'), 0.0, rtol=0, atol=1e-8)
-    assert np.isclose(
-        settings.smu_current_density.m_as('mA/cm**2'), 0.0, rtol=0, atol=1e-8
-    )
-    assert np.isclose(settings.integration_time.m_as('ms'), 33, rtol=0, atol=1e-8)
-    assert np.isclose(settings.delay_time.m_as('s'), 0.0, rtol=0, atol=1e-8)
-    assert np.isclose(settings.eqe_at_laser, 0.90, rtol=0, atol=1e-8)
-    assert np.isclose(settings.laser_spot_size.m_as('cm**2'), 0.4, rtol=0, atol=1e-8)
-    assert np.isclose(settings.subcell_area.m_as('cm**2'), 1.000, rtol=0, atol=1e-8)
-    assert settings.subcell == '--'
+ATOL = 1e-8
 
 
-def test_parse_file_multi_meas():
+def test_power_cont_sweep_2_values():
+    """Minimal multi-measurement test:
+    request 2 child entries and check settings in each.
+    """
     fpath = 'tests/data/LuQY-Control Measurement Files/Power_Cont_sweep.txt'
 
     parser = LuQYParser()
     parent = EntryArchive()
 
-    children = {'0': EntryArchive(), '1': EntryArchive(), '2': EntryArchive()}
-
+    # Prepare two child archives for the first two columns
+    children = {'0': EntryArchive(), '14': EntryArchive()}
     parser.parse(fpath, parent, logging.getLogger(), child_archives=children)
 
-    assert parent.data is not None
+    # ---- child '0'
+    ch = children['0'].data
+    s = ch.settings
+    r = ch.results[0]
+
+    assert np.isclose(s.laser_intensity.m_as('mW/cm**2'), 0.9722, atol=ATOL)
+    assert np.isclose(s.bias_voltage.m_as('V'), 0.0, atol=ATOL)
+    assert np.isclose(s.smu_current_density.m_as('mA/cm**2'), 0.0, atol=ATOL)
+    assert np.isclose(s.integration_time.m_as('ms'), 165.0, atol=ATOL)
+    assert np.isclose(s.delay_time.m_as('s'), 0.0, atol=ATOL)
+    assert np.isclose(float(s.eqe_at_laser), 0.9, atol=ATOL)
+    assert np.isclose(s.laser_spot_size.m_as('cm**2'), 0.4, atol=ATOL)
+    assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
+    assert s.subcell == '--'
+
+    assert np.isclose(float(r.luqy), 0.004403, atol=ATOL)
+    assert np.isclose(r.qfls.m_as('eV'), 0.8944, atol=ATOL)
+    assert getattr(r, 'qfls_het', None) in (None, np.nan)
+    assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
+    assert np.isclose(r.bandgap.m_as('eV'), 1.4226, atol=ATOL)
+    assert np.isclose(r.derived_jsc.m_as('mA/cm**2'), 26.8064, atol=ATOL)
+
+    wl = r.wavelength.m_as('nm')
+    lf = r.luminescence_flux_density.m_as('1/(s*cm**2*nm)')
+    assert wl.shape == (1299,)
+    assert lf.shape == (1299,)
+
+    # ---- child '14'
+    ch = children['14'].data
+    s = ch.settings
+    r = ch.results[0]
+
+    assert np.isclose(s.laser_intensity.m_as('mW/cm**2'), 0.7443, atol=ATOL)
+    assert np.isclose(s.bias_voltage.m_as('V'), 0.0, atol=ATOL)
+    assert np.isclose(s.smu_current_density.m_as('mA/cm**2'), 0.0, atol=ATOL)
+    assert np.isclose(s.integration_time.m_as('ms'), 165.0, atol=ATOL)
+    assert np.isclose(s.delay_time.m_as('s'), 0.0, atol=ATOL)
+    assert np.isclose(float(s.eqe_at_laser), 0.9, atol=ATOL)
+    assert np.isclose(s.laser_spot_size.m_as('cm**2'), 0.4, atol=ATOL)
+    assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
+    assert s.subcell == '--'
+
+    assert np.isclose(float(r.luqy), 0.004232, atol=ATOL)
+    assert np.isclose(r.qfls.m_as('eV'), 0.8866, atol=ATOL)
+    assert getattr(r, 'qfls_het', None) in (None, np.nan)
+    assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
+    assert np.isclose(r.bandgap.m_as('eV'), 1.4226, atol=ATOL)
+    assert np.isclose(r.derived_jsc.m_as('mA/cm**2'), 26.8064, atol=ATOL)
+
+    wl = r.wavelength.m_as('nm')
+    lf = r.luminescence_flux_density.m_as('1/(s*cm**2*nm)')
+    assert wl.shape == (1299,)
+    assert lf.shape == (1299,)
 
 
-"""
-def test_parse_file_single_meas():
-    fpath = 'tests/data/0_1_0-ecf314iynbrwtd33zkk5auyebh.txt'
-
+def test_het_avg_sweep_values_suns():
+    fpath = 'tests/data/LuQY-Control Measurement Files/HET_Avg_sweep.txt'
     parser = LuQYParser()
-    archive = EntryArchive()
-    parser.parse(fpath, archive, logging.getLogger())
+    parent = EntryArchive()
+    children = {'0': EntryArchive(), '1': EntryArchive()}
+    parser.parse(fpath, parent, logging.getLogger(), child_archives=children)
 
-    assert archive.data is not None
-    meas = archive.data
-    assert getattr(meas, 'settings') is not None
-    assert getattr(meas, 'results') and len(meas.results) == 1
+    # ---- child '0'
+    ch = children['0'].data
+    s = ch.settings
+    r = ch.results[0]
 
-    # check settings
-    settings = meas.settings
-    assert np.isclose(settings.laser_intensity_suns, 0.91, rtol=0, atol=1e-8)
-    assert np.isclose(settings.bias_voltage.m_as('V'), 0.0, rtol=0, atol=1e-8)
-    assert np.isclose(
-        settings.smu_current_density.m_as('mA/cm**2'), 0.00, rtol=0, atol=1e-8
-    )
-    assert np.isclose(settings.integration_time.m_as('ms'), 100.0, rtol=0, atol=1e-8)
-    assert np.isclose(settings.delay_time.m_as('s'), 0.0, rtol=0, atol=1e-8)
-    assert np.isclose(settings.eqe_at_laser, 0.90, rtol=0, atol=1e-8)
-    assert np.isclose(settings.laser_spot_size.m_as('cm**2'), 0.10, rtol=0, atol=1e-8)
-    assert np.isclose(settings.subcell_area.m_as('cm**2'), 1.000, rtol=0, atol=1e-8)
-    assert settings.subcell == '--'
+    assert np.isclose(s.laser_intensity.m_as('mW/cm**2'), 99.5, atol=ATOL)
+    assert np.isclose(s.bias_voltage.m_as('V'), 0.0, atol=ATOL)
+    assert np.isclose(s.smu_current_density.m_as('mA/cm**2'), 0.0, atol=ATOL)
+    assert np.isclose(s.integration_time.m_as('ms'), 165.0, atol=ATOL)
+    assert np.isclose(s.delay_time.m_as('s'), 0.0, atol=ATOL)
+    assert np.isclose(float(s.eqe_at_laser), 0.9, atol=ATOL)
+    assert np.isclose(s.laser_spot_size.m_as('cm**2'), 0.4, atol=ATOL)
+    assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
+    assert s.subcell == '--'
 
-    # check results
-    res = meas.results[0]
-    assert np.isclose(res.luminescence_quantum_yield, 0.0677, rtol=0, atol=1e-8)
-    assert np.isclose(res.bandgap.m_as('eV'), 2.095, rtol=0, atol=1e-8)
-    assert np.isclose(
-        res.quasi_fermi_level_splitting.m_as('eV'), 1.532, rtol=0, atol=1e-8
-    )
-    assert np.isclose(res.derived_jsc.m_as('mA/cm**2'), 10.32, rtol=0, atol=1e-8)
+    assert np.isclose(float(r.luqy), 0.00477, atol=ATOL)
+    assert np.isclose(r.qfls.m_as('eV'), 1.007, atol=ATOL)
+    assert np.isclose(r.qfls_het.m_as('eV'), 1.009, atol=ATOL)
+    assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
+    assert np.isclose(r.bandgap.m_as('eV'), 1.423, atol=ATOL)
+    assert np.isclose(r.derived_jsc.m_as('mA/cm**2'), 26.806, atol=ATOL)
 
-    # check data arrays
-    wl = res.wavelength.m_as('nm')
-    lf = res.luminescence_flux_density.m_as('1/(s*cm**2*nm)')
-    rc = np.asarray(res.raw_spectrum_counts, dtype=float)  # без единиц
-    dc = np.asarray(res.dark_spectrum_counts, dtype=float)
+    wl = r.wavelength.m_as('nm')
+    lf = r.luminescence_flux_density.m_as('1/(s*cm**2*nm)')
+    assert wl.shape == (1299,)
+    assert lf.shape == (1299,)
 
-    assert wl is not None and lf is not None and rc is not None and dc is not None
-    n = len(wl)
-    assert n > 0
-    assert len(lf) == n
-    assert len(rc) == n
-    assert len(dc) == n
+    # ---- child '1'
+    ch = children['1'].data
+    s = ch.settings
+    r = ch.results[0]
 
-    # sanity-check the first data point
-    assert np.isclose(wl[0], 549.5612, rtol=0, atol=1e-4)  # 5.495612E+2
-    assert np.isclose(lf[0], 0.0, rtol=0, atol=1e-12)
-    assert np.isclose(rc[0], 1501.733, rtol=0, atol=1e-3)
-    assert np.isclose(dc[0], 1500.533, rtol=0, atol=1e-3)
+    assert np.isclose(s.laser_intensity.m_as('mW/cm**2'), 88.6, atol=ATOL)
+    assert np.isclose(s.bias_voltage.m_as('V'), 0.0, atol=ATOL)
+    assert np.isclose(s.smu_current_density.m_as('mA/cm**2'), 0.0, atol=ATOL)
+    assert np.isclose(s.integration_time.m_as('ms'), 165.0, atol=ATOL)
+    assert np.isclose(s.delay_time.m_as('s'), 0.0, atol=ATOL)
+    assert np.isclose(float(s.eqe_at_laser), 0.9, atol=ATOL)
+    assert np.isclose(s.laser_spot_size.m_as('cm**2'), 0.4, atol=ATOL)
+    assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
+    assert s.subcell == '--'
 
-"""
+    assert np.isclose(float(r.luqy), 0.00496, atol=ATOL)
+    assert np.isclose(r.qfls.m_as('eV'), 1.004, atol=ATOL)
+    assert np.isclose(r.qfls_het.m_as('eV'), 1.006, atol=ATOL)
+    assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
+    assert np.isclose(r.bandgap.m_as('eV'), 1.423, atol=ATOL)
+    assert np.isclose(r.derived_jsc.m_as('mA/cm**2'), 26.806, atol=ATOL)
+
+    wl = r.wavelength.m_as('nm')
+    lf = r.luminescence_flux_density.m_as('1/(s*cm**2*nm)')
+    assert wl.shape == (1299,)
+    assert lf.shape == (1299,)
+
+
+def test_het_avg_single_values():
+    fpath = 'tests/data/LuQY-Control Measurement Files/HET_Avg.txt'
+    parser = LuQYParser()
+    parent = EntryArchive()
+    children = {'0': EntryArchive()}  # only first column
+    parser.parse(fpath, parent, logging.getLogger(), child_archives=children)
+
+    ch = children['0'].data
+    s = ch.settings
+    r = ch.results[0]
+
+    assert np.isclose(s.laser_intensity.m_as('mW/cm**2'), 101.0, atol=ATOL)
+    assert np.isclose(s.bias_voltage.m_as('V'), 0.0, atol=ATOL)
+    assert np.isclose(s.smu_current_density.m_as('mA/cm**2'), 0.0, atol=ATOL)
+    assert np.isclose(s.integration_time.m_as('ms'), 33.0, atol=ATOL)
+    assert np.isclose(s.delay_time.m_as('s'), 0.0, atol=ATOL)
+    assert np.isclose(float(s.eqe_at_laser), 0.9, atol=ATOL)
+    assert np.isclose(s.laser_spot_size.m_as('cm**2'), 0.4, atol=ATOL)
+    assert np.isclose(s.subcell_area.m_as('cm**2'), 1.0, atol=ATOL)
+    assert s.subcell == '--'
+
+    assert np.isclose(float(r.luqy), 0.004958000000000001, atol=ATOL)
+    assert np.isclose(r.qfls.m_as('eV'), 1.008, atol=ATOL)
+    assert np.isclose(r.qfls_het.m_as('eV'), 1.009, atol=ATOL)
+    assert np.isclose(float(r.qfls_confidence), 1.0, atol=ATOL)
+    assert np.isclose(r.bandgap.m_as('eV'), 1.422, atol=ATOL)
+    assert np.isclose(r.derived_jsc.m_as('mA/cm**2'), 26.81, atol=ATOL)
+
+    wl = r.wavelength.m_as('nm')
+    lf = r.luminescence_flux_density.m_as('1/(s*cm**2*nm)')
+    assert wl.shape == (1299,)
+    assert lf.shape == (1299,)
+
+    # In the single file with 4 columns
+    rc = np.asarray(r.raw_spectrum_counts, dtype=float)
+    dc = np.asarray(r.dark_spectrum_counts, dtype=float)
+    assert rc.shape == (1299,)
+    assert dc.shape == (1299,)

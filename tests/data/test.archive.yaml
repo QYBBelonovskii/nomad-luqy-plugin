@@ -3,7 +3,7 @@ data:
   name: "0 1 0-ecf314iynbrwtd33zkk5auyebh"
   datetime: "2025-08-27T09:05:24.809713+00:00"
   settings:
-    laser_intensity_suns: 0.91
+    laser_intensity: 0.91
     bias_voltage: 0
     smu_current_density: 0
     integration_time: 100
