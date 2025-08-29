@@ -512,8 +512,8 @@ class LuQYParser(MatchingParser):
                 key = str(i)
                 if key in child_archives:
                     child_archives[key].data = build_measurement(i)
-            # if num_meas > 0:
-            #    archive.data = build_measurement(0)
+            if num_meas > 0:
+                archive.data = build_measurement(0)
             return
 
         # single:
