@@ -408,6 +408,13 @@ class LuQYParser(MatchingParser):
         logger: BoundLogger,
         child_archives: dict[str, EntryArchive] | None = None,
     ) -> None:
+        logger.debug('Parsing LuQY Pro file', file=mainfile)
+        logger.debug('Child child_archives', child_archives=child_archives)
+        logger.debug('Archive before parsing', archive=archive)
+
+        # read file content (try archive context first, then fallback to open)
+        raw_bytes: bytes
+
         try:
             with archive.m_context.raw_file(mainfile, mode='rb') as f:
                 raw_bytes = f.read()
