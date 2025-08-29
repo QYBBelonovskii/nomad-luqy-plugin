@@ -514,7 +514,6 @@ class LuQYParser(MatchingParser):
             for key, ch in child_archives.items():
                 i = int(key)
                 ch.data = build_measurement(i)
-            return
 
         # single:
         archive.data = build_measurement(0)
