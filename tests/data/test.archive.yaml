@@ -1,24 +1,23 @@
 data:
   m_def: nomad_luqy_plugin.schema_packages.schema_package.LuQYProMeasurement
-  name: "0 1 0-ecf314iynbrwtd33zkk5auyebh"
-  datetime: "2025-08-27T09:05:24.809713+00:00"
+  name: "Standard Avg sweep"
+  datetime: "2025-08-29T08:08:51.552316+00:00"
   settings:
-    laser_intensity: 0.91
+    timestamp: "2025-08-27T14:01:44+00:00"
+    laser_intensity: 99.6
     bias_voltage: 0
     smu_current_density: 0
-    integration_time: 100
+    integration_time: 170
     delay_time: 0
     eqe_at_laser: 0.9
-    laser_spot_size: 0.10
-    subcell_area: 1.0
+    laser_spot_size: 0.4
+    subcell_area: 1
     subcell: "--"
   results:
-    - luminescence_quantum_yield: 0.0677
-      quasi_fermi_level_splitting: 1.532
-      qfls_confidence: 0
-      bandgap: 2.095
-      derived_jsc: 10.32
-      wavelength: [549.5612, 549.9388, 550.3163]
+    - luqy: 0.00489
+      qfls: 1.007
+      qfls_confidence: 1
+      bandgap: 1.422
+      derived_jsc: 26.806
+      wavelength: [550.412, 550.791, 551.169]
       luminescence_flux_density: [0.0, 0.0, 0.0]
-      raw_spectrum_counts:  [1501.733, 1501.067, 1503.467]
-      dark_spectrum_counts: [1500.533, 1496.000, 1498.667]
