@@ -378,6 +378,7 @@ class LuQYParser(MatchingParser):
         super().__init__(name='luqy_pro_parser')
         self._mainfile_name_re = re.compile(FILE_RE)
 
+    """
     def is_mainfile(
         self,
         filename: str,
@@ -400,6 +401,7 @@ class LuQYParser(MatchingParser):
         n = max(n, 1)
 
         return [str(i) for i in range(n)]
+    """
 
     def parse(
         self,
